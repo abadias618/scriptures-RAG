@@ -1,6 +1,9 @@
 from langchain_community.document_loaders.csv_loader import CSVLoader
+from csv_constants import csv_columns, csv_simplified_columns
 from create_vector_store import VectorStore
+from flow import Flow
 import os
+
 
 vs = None
 if os.path.exists("vec_store"):
@@ -14,55 +17,44 @@ if user == "Yes":
     print("done...")
 elif user == "No":
     file_path = "./data/lds-scriptures.csv"
-    cols = ["volume_id",
-            "book_id",
-            "chapter_id",
-            "verse_id",
-            "volume_title",
-            "book_title",
-            "volume_long_title",
-            "book_long_title",
-            "volume_subtitle",
-            "book_subtitle",
-            "volume_short_title",
-            "book_short_title",
-            "volume_lds_url",
-            "book_lds_url",
-            "chapter_number",
-            "verse_number",
-            "verse_title",
-            "verse_short_title"]
 
     loader = CSVLoader(file_path=file_path,
                     content_columns=["scripture_text"],
-                    metadata_columns=cols
+                    metadata_columns=csv_simplified_columns
                     )
     data = loader.load()
     print(len(data), "rows in CSV")
     docs = []
     print("creating Document collection...")
-    for record in data[0:3]:
-        #print(type(record))
-        #print(record,"\n")
-        record.page_content = record.page_content.strip("scripture_text: ")
-        docs.append(record)
+    # FOR SOME REASON ONLY BATCHED ADDING WORKS
+    # otherwise Segmentation fault (core dumped) ERROR
+    # TODO: Fix hardcoded values
+    for fold in [(0,10000),(10000,20000),(20000,30000),(30000,40000),(40000,41996)]:
+        sub_doc = []
+        for record in data[fold[0]:fold[1]]:
+            record.page_content = record.page_content.strip("scripture_text: ")
+            sub_doc.append(record)
+        docs.append(sub_doc)
         
+    print(len(docs),"docs in collection ready to add to vecstore.") 
     #print("docs",docs)
     print("done...")
     print("creating new vector store...")
     vs = VectorStore(create=True).vector_store
     print("adding vectorized documents to Vector Store")
-    vs.add_documents(documents = docs)
+    for d in docs:
+        print("adding fold")
+        vs.add_documents(documents = d)
     print("saving for future use as vec_store")
     vs.dump("./vec_store")
     print("done...")
 
-print("vec store obj",vs)
-r = vs.as_retriever()
-print("retriever obj",r)
-results = r.invoke("In the beginning God created the heaven and the earth.")
-for doc in results:
-    print(doc.page_content)
+# Test similarity search
+#sim = vs.similarity_search_with_score("Faith is like a seed", k=10)
+#for doc in sim:
+#    print(sim.page_content, sim.metadata.get(verse_title))
 
-sim = vs.similarity_search_with_score("light", k=3)
-print(sim)
+flow = Flow(vs)
+graph = flow.build_graph()
+response = graph.invoke({"question": "What do I need to do to attain Salvation?"})
+print(response["answer"])

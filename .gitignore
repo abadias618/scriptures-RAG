@@ -1,3 +1,5 @@
+# Because the embedding file is too big will will not add it to the repo (about 1.2 GB)
+vec_store
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

@@ -10,7 +10,6 @@ class VectorStore:
         self.create = create
         load_dotenv()  # Load environment variables from .env file
         self.api_key = os.getenv("OPENAI_API_KEY")
-        print("API key",self.api_key)
         self.embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
         if self.create:    
             self.vector_store = InMemoryVectorStore(self.embeddings)
