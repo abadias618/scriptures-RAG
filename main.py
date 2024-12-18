@@ -1,6 +1,7 @@
 from langchain_community.document_loaders.csv_loader import CSVLoader
 from csv_constants import csv_columns, csv_simplified_columns
 from create_vector_store import VectorStore
+from GradioGUI import GradioGUI
 from flow import Flow
 import os
 
@@ -56,5 +57,8 @@ elif user == "No":
 
 flow = Flow(vs)
 graph = flow.build_graph()
-response = graph.invoke({"question": "What do I need to do to attain Salvation?"})
-print(response["answer"])
+gui = GradioGUI(graph)
+gui.launch_gui()
+
+#response = graph.invoke({"question": "What do I need to do to attain Salvation?"})
+#print(response["answer"])
