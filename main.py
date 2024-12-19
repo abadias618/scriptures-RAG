@@ -7,10 +7,17 @@ import os
 
 
 vs = None
-if os.path.exists("vec_store"):
-    user = input("There's a Vector Store saved, do you want to load it? (Yes/No): ")
-else:
-    user = "No"
+while True:
+    if os.path.exists("vec_store"):
+        user = input("There's a Vector Store saved, do you want to load it?\n \
+            Yes (load vec_store file)\n \
+            No (re-create vec_store):\n --> ")
+        if user not in ["Yes","No"]:
+            print("Please enter Yes/No")
+            continue
+    else:
+        user = "No"
+    break
     
 if user == "Yes":
     print("fetching saved vector store...")
